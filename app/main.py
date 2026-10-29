@@ -5,6 +5,7 @@ and runs Supertonic 3 text-to-speech locally in the container.
 """
 
 import os
+import threading
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -13,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import asr
-from tts import LANGUAGES, VOICES, synthesize, tts_ready
+from tts import LANGUAGES, VOICES, synthesize, tts_ready, warmup
 
 MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", "500"))
 MAX_TEXT_CHARS = int(os.environ.get("MAX_TEXT_CHARS", "20000"))
@@ -21,6 +22,13 @@ MAX_TEXT_CHARS = int(os.environ.get("MAX_TEXT_CHARS", "20000"))
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 app = FastAPI(title="Transcriptor", version="1.0.0")
+
+
+@app.on_event("startup")
+def warm_up_tts() -> None:
+    """Preload the Supertonic engine in the background so the first user
+    request does not pay the model-loading cost."""
+    threading.Thread(target=warmup, daemon=True, name="tts-warmup").start()
 
 
 @app.get("/api/health")
