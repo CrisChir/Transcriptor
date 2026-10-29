@@ -16,6 +16,12 @@ with Docker on macOS.
   - **Parakeet TDT v3 (0.6B)** - FluidAudio multilingual batch model covering
     25 European languages **including Romanian**. This is the default model for
     non-English audio.
+  - **Parakeet Ultra (0.6B)** - post-training refinement of v3: same 25
+    languages and same speed, clearly better accuracy (mean FLEURS WER
+    11.67% vs 14.81%; wins all 24 FLEURS languages). **Recommended for
+    Romanian.**
+  - **Nemotron Unified ASR 0.6B** - unified multilingual checkpoint
+    (nemotron-labs-unified-asr-0.6b) run with a Romanian language prompt.
 - **Text-to-speech** runs inside the container with
   [Supertonic 3](https://github.com/supertone-oss-archive/supertonic) (ONNX
   Runtime, CPU): 31 languages **including Romanian**, 10 preset voices
@@ -59,6 +65,8 @@ A fully native mode (no Docker) is also provided: `scripts/run_native.sh`.
 | Capability | Model | Languages | Speakers |
 |---|---|---|---|
 | Transcription (default) | Parakeet TDT v3 0.6B (Core ML) | 25 European languages, **incl. Romanian** | no |
+| Transcription (multilingual, highest accuracy) | Parakeet Ultra (Core ML) | 25 European languages, **incl. Romanian** | no |
+| Transcription (Romanian prompt) | Nemotron Unified ASR 0.6B (Core ML) | 25 European languages, **incl. Romanian** (`ro` prompt) | no |
 | Transcription (English, higher accuracy) | Parakeet TDT v2 (Core ML) | English | no |
 | Transcription (English, punctuation + casing) | Parakeet Unified (Core ML) | English | no |
 | Meeting transcription | Nemotron 3.5 Transcribe Lite (Core ML) | English (validated) | **yes** (up to 8) |
@@ -67,8 +75,10 @@ A fully native mode (no Docker) is also provided: `scripts/run_native.sh`.
 Note on Nemotron: the full NVIDIA Nemotron 3.5 Transcribe (30B) is multilingual,
 but its Core ML "Lite" port keeps only the ASR encoder + CTC head without the
 language model, and FluidAudio validates it on English (about 26% WER on AMI,
-at roughly 500x real time). For Romanian and other non-English audio, use the
-default Parakeet model, which officially covers Romanian.
+at roughly 500x real time). For Romanian and other non-English audio, use a
+Parakeet model, which officially covers Romanian; for the best Romanian
+accuracy select **Parakeet Ultra**, and compare **Nemotron Unified ASR**
+(Romanian prompt) as an alternative.
 
 ## Requirements
 
@@ -144,6 +154,10 @@ the GUI on port 7860.
 3. Pick a model:
    - **Parakeet TDT v3 (multilingual, incl. Romanian)** - default, best for
      Romanian audio.
+   - **Parakeet Ultra (multilingual, highest accuracy)** - recommended for
+     Romanian audio.
+   - **Nemotron Unified ASR (Romanian prompt)** - unified multilingual
+     alternative.
    - **Parakeet v2 / Unified (English)** - higher accuracy / punctuation.
    - **Nemotron 3.5 Transcribe Lite (English meetings)** - speaker-labelled
      turns, extremely fast.
@@ -180,7 +194,7 @@ curl http://localhost:7860/api/health
 curl http://localhost:8765/models
 curl http://localhost:7860/api/config
 
-# Transcribe a file (model: parakeet-v3 | parakeet-v2-en | parakeet-unified-en | nemotron35-en)
+# Transcribe a file (model: parakeet-v3 | parakeet-ultra | nemotron-unified-ro | parakeet-v2-en | parakeet-unified-en | nemotron35-en)
 curl -X POST http://localhost:7860/api/transcribe -F "file=@meeting.m4a" -F "model=parakeet-v3"
 
 # Synthesize speech (Romanian)
@@ -234,6 +248,9 @@ bash scripts/run_native.sh                        # terminal 2 (web app, http://
 - **TTS first start is slow** - the container downloads about 400 MB of
   Supertonic assets on first boot; they persist in the `supertonic-models`
   volume.
+- **"Invalid model version: ultra" (or nemotron-unified rejected)** - your
+  FluidAudio build predates these models; rerun `bash engine/setup.sh`, which
+  updates FluidAudio to the latest main and rebuilds the CLI.
 - **Live tab cannot access the microphone** - allow the microphone permission
   for http://localhost:7860 in the browser site settings, and make sure no
   other application holds the input device exclusively.

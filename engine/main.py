@@ -59,6 +59,30 @@ MODELS: Dict[str, Dict[str, Any]] = {
         "extra_args": ["--model-version", "unified"],
         "note": "English with punctuation and capitalization, word timings in JSON.",
     },
+    "parakeet-ultra": {
+        "label": "Parakeet Ultra (0.6B) - multilingual, highest accuracy",
+        "languages": "25 European languages, including Romanian",
+        "speakers": False,
+        "cli": "transcribe",
+        "extra_args": ["--model-version", "ultra"],
+        "note": (
+            "Post-training refinement of Parakeet TDT v3: same 25 languages "
+            "and speed, clearly better accuracy (mean FLEURS WER 11.67% vs "
+            "14.81% for v3; wins all 24 FLEURS languages). Best accuracy for "
+            "Romanian."
+        ),
+    },
+    "nemotron-unified-ro": {
+        "label": "Nemotron Unified ASR 0.6B - multilingual, Romanian language prompt",
+        "languages": "25 European languages, Romanian prompt",
+        "speakers": False,
+        "cli": "transcribe",
+        "extra_args": ["--model-version", "nemotron-unified", "--unified-language", "ro"],
+        "note": (
+            "nvidia/nemotron-labs-unified-asr-0.6b run through the Unified "
+            "ASR manager with the Romanian language prompt (prompt_id 20)."
+        ),
+    },
     "nemotron35-en": {
         "label": "Nemotron 3.5 Transcribe Lite - English meetings with speakers",
         "languages": "English (validated)",

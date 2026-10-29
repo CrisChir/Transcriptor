@@ -54,6 +54,8 @@ var HINTS = {
   'parakeet-v3': '25 European languages including Romanian. Best default for Romanian audio.',
   'parakeet-v2-en': 'English only, higher accuracy.',
   'parakeet-unified-en': 'English with punctuation and capitalization.',
+  'parakeet-ultra': 'Post-training refinement of Parakeet v3: same 25 languages (incl. Romanian) and same speed, clearly better accuracy (mean FLEURS WER 11.67% vs 14.81%). Best choice for Romanian audio.',
+  'nemotron-unified-ro': 'nvidia/nemotron-labs-unified-asr-0.6b with the Romanian language prompt: a unified multilingual checkpoint worth comparing against Parakeet for Romanian.',
   'nemotron35-en': 'Nemotron 3.5 Transcribe Lite (Core ML) + Nemotron-3-Diarization: English meetings with speaker labels, hundreds of times real time.'
 };
 $('asr-model').addEventListener('change', function () { $('model-hint').textContent = HINTS[this.value] || ''; });

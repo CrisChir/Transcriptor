@@ -76,6 +76,8 @@ if [[ "$WARMUP" == "1" ]]; then
   .venv/bin/python -c "import wave; w=wave.open('$SILENCE','wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(b'\x00\x00' * 32000); w.close()"
   "$CLI" transcribe "$SILENCE" >/dev/null 2>&1 || echo "(parakeet warm-up returned non-zero; continuing)"
   "$CLI" nemotron35-transcribe "$SILENCE" >/dev/null 2>&1 || echo "(nemotron warm-up returned non-zero; continuing)"
+  "$CLI" transcribe "$SILENCE" --model-version ultra >/dev/null 2>&1 || echo "(parakeet ultra warm-up returned non-zero; continuing)"
+  "$CLI" transcribe "$SILENCE" --model-version nemotron-unified --unified-language ro >/dev/null 2>&1 || echo "(nemotron-unified warm-up returned non-zero; continuing)"
   rm -f "$SILENCE"
   echo "-- Warm-up done"
 fi
