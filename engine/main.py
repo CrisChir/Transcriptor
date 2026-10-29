@@ -8,6 +8,10 @@ Why a host service: Docker Desktop on macOS runs Linux ARM64 containers inside a
 virtual machine. Core ML and the Apple Neural Engine are macOS-only frameworks
 and are not visible inside Linux containers, so CoreML inference must run on
 the macOS host and be exposed over HTTP.
+
+ffmpeg is OPTIONAL: when present, uploads are normalized to 16 kHz mono WAV
+before inference (widest format compatibility); when absent, the original file
+is passed to fluidaudiocli, which decodes and resamples audio itself.
 """
 
 import json
@@ -28,6 +32,7 @@ FLUIDAUDIO_CLI = Path(os.environ.get(
     str(Path(__file__).resolve().parent / "vendor" / "FluidAudio" / ".build" / "release" / "fluidaudiocli"),
 ))
 ASR_TIMEOUT = int(os.environ.get("ASR_TIMEOUT", "3600"))
+HAVE_FFMPEG = shutil.which("ffmpeg") is not None
 
 MODELS: Dict[str, Dict[str, Any]] = {
     "parakeet-v3": {
@@ -191,7 +196,8 @@ async def health():
         "ok": True,
         "cli": str(FLUIDAUDIO_CLI),
         "cli_exists": FLUIDAUDIO_CLI.exists(),
-        "ffmpeg": shutil.which("ffmpeg") is not None,
+        "ffmpeg": HAVE_FFMPEG,
+        "ffmpeg_note": None if HAVE_FFMPEG else "ffmpeg not found (optional): passing original files to fluidaudiocli",
         "models": sorted(MODELS.keys()),
     }
 
@@ -215,14 +221,21 @@ async def asr(file: UploadFile = File(...), model: str = Form("parakeet-v3")):
 
         with src.open("wb") as out:
             shutil.copyfileobj(file.file, out)
-        convert_to_wav16k(src, wav)
+
+        # ffmpeg is optional: with it, normalize to 16 kHz mono WAV; without
+        # it, fluidaudiocli decodes and resamples the original file itself.
+        if HAVE_FFMPEG:
+            convert_to_wav16k(src, wav)
+            audio = wav
+        else:
+            audio = src
 
         spec = MODELS[model]
 
         if model == "nemotron35-en":
             words_path = work / "words.json"
             txt_path = work / "transcript.txt"
-            cmd = [str(cli), spec["cli"], str(wav), "--out", str(txt_path), "--json", str(words_path)]
+            cmd = [str(cli), spec["cli"], str(audio), "--out", str(txt_path), "--json", str(words_path)]
             proc, elapsed = run_cli(cmd)
             if proc.returncode != 0:
                 raise HTTPException(500, "fluidaudiocli failed: " + (proc.stderr.strip()[-600:] or proc.stdout.strip()[-600:]))
@@ -245,7 +258,7 @@ async def asr(file: UploadFile = File(...), model: str = Form("parakeet-v3")):
             }
 
         # Parakeet family: prefer --output-json, fall back to stdout.
-        cmd = [str(cli), spec["cli"], str(wav)] + spec["extra_args"]
+        cmd = [str(cli), spec["cli"], str(audio)] + spec["extra_args"]
         out_json = work / "asr.json"
         proc, elapsed = run_cli(cmd + ["--output-json", str(out_json)])
         transcript = None

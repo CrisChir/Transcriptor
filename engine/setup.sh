@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 # Build the Transcriptor CoreML ASR engine on macOS (Apple Silicon).
+# No Homebrew required. Only the Xcode Command Line Tools (Swift + python3)
+# are needed: xcode-select --install
+#
 # - clones and builds the FluidAudio CLI (Swift, Core ML)
 # - creates a Python virtualenv for the engine HTTP service
 # - optionally warms up the models (downloads several GB on first run)
+#
+# ffmpeg is OPTIONAL: without it, FluidAudio decodes and resamples audio by
+# itself. Install it (brew install ffmpeg, a static build, or MacPorts) only
+# for the widest input-format compatibility.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -21,18 +28,24 @@ if [[ "$(uname -m)" != "arm64" ]]; then
   exit 1
 fi
 
-echo "-- Checking developer tools"
+echo "-- Checking developer tools (no Homebrew required)"
 if ! command -v swift >/dev/null 2>&1; then
   echo "Swift not found. Install the Xcode Command Line Tools: xcode-select --install" >&2
   exit 1
 fi
-if ! command -v brew >/dev/null 2>&1; then
-  echo "Homebrew not found. Install it from https://brew.sh" >&2
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "python3 not found. Install the Xcode Command Line Tools: xcode-select --install" >&2
   exit 1
 fi
-if ! command -v ffmpeg >/dev/null 2>&1; then
-  echo "-- Installing ffmpeg"
-  brew install ffmpeg
+if command -v ffmpeg >/dev/null 2>&1; then
+  echo "ffmpeg found: uploads will be normalized to 16 kHz mono WAV."
+else
+  echo "ffmpeg NOT found (optional): fluidaudiocli will decode audio directly."
+  echo "  For the widest format support install ffmpeg later (brew, static build, or MacPorts)."
+fi
+if ! command -v git >/dev/null 2>&1; then
+  echo "git not found. Install the Xcode Command Line Tools: xcode-select --install" >&2
+  exit 1
 fi
 
 echo "-- Building FluidAudio CLI (ref: $REF)"
@@ -59,10 +72,11 @@ fi
 if [[ "$WARMUP" == "1" ]]; then
   echo "-- Warm-up: downloading models (several GB on first run; the Nemotron"
   echo "   diarizer also compiles once for the Neural Engine, ~80 s)."
-  ffmpeg -nostdin -y -loglevel error -f lavfi -i anullsrc=r=16000:cl=mono -t 2 /tmp/transcriptor_silence.wav
-  "$CLI" transcribe /tmp/transcriptor_silence.wav >/dev/null 2>&1 || echo "(parakeet warm-up returned non-zero; continuing)"
-  "$CLI" nemotron35-transcribe /tmp/transcriptor_silence.wav >/dev/null 2>&1 || echo "(nemotron warm-up returned non-zero; continuing)"
-  rm -f /tmp/transcriptor_silence.wav
+  SILENCE=/tmp/transcriptor_silence.wav
+  .venv/bin/python -c "import wave; w=wave.open('$SILENCE','wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(b'\x00\x00' * 32000); w.close()"
+  "$CLI" transcribe "$SILENCE" >/dev/null 2>&1 || echo "(parakeet warm-up returned non-zero; continuing)"
+  "$CLI" nemotron35-transcribe "$SILENCE" >/dev/null 2>&1 || echo "(nemotron warm-up returned non-zero; continuing)"
+  rm -f "$SILENCE"
   echo "-- Warm-up done"
 fi
 
