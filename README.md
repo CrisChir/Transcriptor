@@ -68,11 +68,16 @@ default Parakeet model, which officially covers Romanian.
 
 ## Requirements
 
+**Homebrew is NOT required.** The only system dependency is the Xcode Command
+Line Tools, which provide Swift and python3.
+
 - Apple Silicon Mac (M1/M2/M3/M4/M5), macOS 15 or newer (Core ML model requirement)
-- Xcode Command Line Tools (Swift 6): `xcode-select --install`
-- [Homebrew](https://brew.sh) and `ffmpeg` (`brew install ffmpeg`)
-- Docker Desktop for Mac (Apple Silicon)
-- Python 3.10-3.13 (engine service and native mode)
+- Xcode Command Line Tools (Swift 6 + python3 + git): `xcode-select --install`
+- Docker Desktop for Mac (Apple Silicon), for the containerized GUI
+- ffmpeg, **optional**: without it, FluidAudio decodes and resamples audio by
+  itself; with it, uploads are normalized to 16 kHz mono for the widest format
+  compatibility. Install it via `brew install ffmpeg`, a static macOS build,
+  or MacPorts - whichever you prefer.
 - About 6 GB of disk for models (Parakeet, Nemotron Lite encoder + CTC head
   about 1.6 GB, diarizer about 200 MB, Supertonic about 400 MB) and an internet
   connection for the first run
@@ -100,13 +105,15 @@ The single-command alternative is `bash scripts/start.sh`.
 
 ### 1. Engine setup (`engine/setup.sh`)
 
-Verifies macOS/Apple Silicon, installs `ffmpeg` if missing, clones FluidAudio
-(ref configurable via `FLUIDAUDIO_REF`, default `main`), builds
+Verifies macOS/Apple Silicon and the Xcode Command Line Tools, clones
+FluidAudio (ref configurable via `FLUIDAUDIO_REF`, default `main`), builds
 `fluidaudiocli` in release mode, creates a Python virtualenv for the engine
 service and optionally warms up the models (pass `--skip-warmup` to skip).
-The warm-up runs each model once on 2 seconds of silence, so the multi-GB model
-download and the one-time Neural Engine compilation of the diarizer (about
-80 s) happen before you need them.
+The warm-up runs each model once on 2 seconds of silence (generated with pure
+Python, no ffmpeg needed), so the multi-GB model download and the one-time
+Neural Engine compilation of the diarizer (about 80 s) happen before you need
+them. If ffmpeg is not installed the script simply notes it and continues;
+FluidAudio handles audio decoding in that case.
 
 ### 2. Engine start (`engine/run.sh`)
 
@@ -126,9 +133,10 @@ the GUI on port 7860.
 ### Transcription
 
 1. Open the **Transcribe** tab.
-2. Drop or select an audio/video file (wav, mp3, m4a, mp4, mov...; the engine
-   converts everything to 16 kHz mono with ffmpeg). Limit defaults to 500 MB
-   (`MAX_UPLOAD_MB`).
+2. Drop or select an audio/video file (wav, mp3, m4a, mp4, mov...). With ffmpeg
+   installed it is converted to 16 kHz mono automatically; without ffmpeg,
+   FluidAudio decodes the file directly (wav/m4a/mp3 and similar work fine).
+   Limit defaults to 500 MB (`MAX_UPLOAD_MB`).
 3. Pick a model:
    - **Parakeet TDT v3 (multilingual, incl. Romanian)** - default, best for
      Romanian audio.
@@ -200,6 +208,9 @@ bash scripts/run_native.sh                        # terminal 2 (web app, http://
   `FLUIDAUDIO_CLI` to your binary.
 - **macOS firewall prompt** - allow incoming connections for Python/uvicorn;
   the engine only serves your local Docker VM and LAN.
+- **Decoding fails without ffmpeg** - FluidAudio decodes common formats
+  itself; for an exotic container install ffmpeg (brew, static build, or
+  MacPorts) and restart the engine.
 - **Transcript looks like progress logs (Parakeet)** - your FluidAudio build
   does not support `--output-json`; the raw CLI output is returned as a
   fallback. Update FluidAudio (`cd engine/vendor/FluidAudio && git pull`, then
