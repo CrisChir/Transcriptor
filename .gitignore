@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv*/
+venv/
+
+# Models and media (downloaded / user files)
+models/
+engine/vendor/
+engine/.venv/
+*.wav
+*.mp3
+*.m4a
+*.mp4
+*.mov
+
+# Local config
+.env

@@ -1,0 +1,11 @@
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+httpx>=0.27
+numpy>=1.26
+soundfile>=0.12
+huggingface-hub>=0.30
+
+# Pinned Supertonic 3 SDK from the archive (supports the supertone-oss-archive
+# model namespace and auto_download=False with a local model_dir).
+git+https://github.com/supertone-oss-archive/supertonic-py.git@df0f9686dac7fbbde391b759e2ee5286a3737622
