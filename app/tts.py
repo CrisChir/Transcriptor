@@ -44,7 +44,10 @@ LANGUAGES = {
     "na": "Auto / unknown",
 }
 
-_lock = threading.Lock()
+# RLock (reentrant): synthesize() holds the lock while calling get_tts(),
+# which acquires it again on first initialization. A plain Lock deadlocks
+# the first synthesis forever.
+_lock = threading.RLock()
 _tts = None
 
 
