@@ -18,6 +18,7 @@
 
   <nav>
     <button class="tab active" data-tab="transcribe">Transcribe</button>
+    <button class="tab" data-tab="live">Live</button>
     <button class="tab" data-tab="tts">Text-to-speech</button>
   </nav>
 
@@ -60,6 +61,34 @@
         </details>
       </div>
       <p id="asr-error" class="error hidden"></p>
+    </section>
+
+    <!-- =============== Live transcription =============== -->
+    <section id="tab-live" class="panel">
+      <p class="hint">Record from the microphone. The browser sends a chunk to the engine every few seconds and the transcript appears progressively. For Romanian, keep the default Parakeet model.</p>
+
+      <label for="live-model">Model</label>
+      <select id="live-model">
+        <option value="parakeet-v3" selected>Parakeet TDT v3 - multilingual, incl. Romanian (default)</option>
+        <option value="parakeet-v2-en">Parakeet v2 - English, higher accuracy</option>
+        <option value="parakeet-unified-en">Parakeet Unified - English, punctuation + casing</option>
+        <option value="nemotron35-en">Nemotron 3.5 Transcribe Lite - English meetings, speakers (Core ML)</option>
+      </select>
+      <p class="hint" id="live-model-hint"></p>
+
+      <button type="button" class="primary" id="btn-live">Start recording</button>
+      <span id="live-status" class="muted"></span>
+
+      <div id="live-result" class="result hidden">
+        <div class="result-head">
+          <h2>Live transcript</h2>
+          <div class="spacer"></div>
+          <button id="live-copy" class="ghost">Copy</button>
+          <button id="live-download-txt" class="ghost">Download .txt</button>
+        </div>
+        <pre id="live-text" class="transcript"></pre>
+      </div>
+      <p id="live-error" class="error hidden"></p>
     </section>
 
     <!-- =============== Text-to-speech =============== -->
