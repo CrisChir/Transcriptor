@@ -92,3 +92,22 @@ def synthesize(text: str, lang: str, voice: str, speed: float = 1.05, steps: int
     engine.save_audio(wav, tmp.name)
     dur = float(duration[0]) if hasattr(duration, "__len__") else float(duration)
     return tmp.name, dur
+
+
+def warmup(lang: str = "ro", voice: str = "M1"):
+    """Initialize the engine and run one tiny synthesis so that the first
+    real user request does not pay the model-loading cost.
+
+    Intended to be called at container start in a background thread. Safe to
+    call multiple times; failures are logged, never raised.
+    """
+    try:
+        wav_path, _duration = synthesize(text="Gata.", lang=lang, voice=voice)
+        import os as _os
+        try:
+            _os.unlink(wav_path)
+        except OSError:
+            pass
+        print("TTS warm-up complete.")
+    except Exception as exc:  # noqa: BLE001
+        print("TTS warm-up failed: " + str(exc))
