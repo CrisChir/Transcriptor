@@ -79,7 +79,9 @@ class SynthesizeRequest(BaseModel):
 
 
 @app.post("/api/tts")
-async def tts(req: SynthesizeRequest):
+def tts(req: SynthesizeRequest):
+    # Deliberately a sync endpoint: FastAPI runs it in the threadpool, so a
+    # long CPU synthesis cannot block the event loop (health, transcription).
     try:
         wav_path, duration = synthesize(
             text=req.text.strip(),
