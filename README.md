@@ -21,6 +21,10 @@ with Docker on macOS.
   Runtime, CPU): 31 languages **including Romanian**, 10 preset voices
   (M1-M5, F1-F5), speed and quality control.
 
+- **Live transcription**: the GUI records the microphone in the browser and
+  sends a short chunk to the ASR engine every 6 seconds, producing a
+  progressive transcript. Works for Romanian via the default Parakeet model.
+
 Everything runs on your machine. No audio or text leaves the host.
 
 ## Architecture - please read first
@@ -146,6 +150,18 @@ the GUI on port 7860.
 4. Press Transcribe. The transcript appears with copy and download buttons;
    for Nemotron, speaker turns with timestamps are shown.
 
+### Live transcription
+
+1. Open the **Live** tab and pick a model (the default Parakeet TDT v3
+   supports Romanian).
+2. Press **Start recording** and grant the browser microphone permission.
+3. Speak normally. The browser sends a chunk to the engine every 6 seconds
+   and the transcript appears progressively, a few seconds behind live.
+   Because chunks are transcribed independently, an occasional word split at
+   a chunk boundary is expected.
+4. Press **Stop recording**. The final chunk is transcribed and the complete
+   text can be copied or downloaded as .txt.
+
 ### Text-to-speech
 
 1. Open the **Text-to-speech** tab.
@@ -218,6 +234,9 @@ bash scripts/run_native.sh                        # terminal 2 (web app, http://
 - **TTS first start is slow** - the container downloads about 400 MB of
   Supertonic assets on first boot; they persist in the `supertonic-models`
   volume.
+- **Live tab cannot access the microphone** - allow the microphone permission
+  for http://localhost:7860 in the browser site settings, and make sure no
+  other application holds the input device exclusively.
 
 ## Repository layout
 
