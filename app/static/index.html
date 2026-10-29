@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcriptor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Transcriptor</h1>
+    <p class="subtitle">Local speech-to-text and text-to-speech on Apple Silicon (Core ML + Supertonic)</p>
+    <div class="statusbar">
+      <span id="status-engine" class="pill pill-off">ASR engine: checking...</span>
+      <span id="status-tts" class="pill pill-off">TTS: checking...</span>
+    </div>
+  </header>
+
+  <nav>
+    <button class="tab active" data-tab="transcribe">Transcribe</button>
+    <button class="tab" data-tab="tts">Text-to-speech</button>
+  </nav>
+
+  <main>
+    <!-- =============== Transcription =============== -->
+    <section id="tab-transcribe" class="panel active">
+      <form id="form-transcribe">
+        <div id="dropzone" class="dropzone">
+          <input type="file" id="asr-file" accept="audio/*,video/*" hidden>
+          <p><strong>Click to choose</strong> or drop an audio/video file here</p>
+          <p class="hint">wav, mp3, m4a, flac, mp4, mov... converted to 16 kHz mono automatically</p>
+          <p id="file-name" class="filename"></p>
+        </div>
+
+        <label for="asr-model">Model</label>
+        <select id="asr-model">
+          <option value="parakeet-v3" selected>Parakeet TDT v3 - multilingual, incl. Romanian (default)</option>
+          <option value="parakeet-v2-en">Parakeet v2 - English, higher accuracy</option>
+          <option value="parakeet-unified-en">Parakeet Unified - English, punctuation + casing</option>
+          <option value="nemotron35-en">Nemotron 3.5 Transcribe Lite - English meetings, speakers (Core ML)</option>
+        </select>
+        <p class="hint" id="model-hint"></p>
+
+        <button type="submit" class="primary" id="btn-transcribe">Transcribe</button>
+      </form>
+
+      <div id="asr-result" class="result hidden">
+        <div class="result-head">
+          <h2>Transcript</h2>
+          <span id="asr-elapsed" class="muted"></span>
+          <div class="spacer"></div>
+          <button id="btn-copy" class="ghost">Copy</button>
+          <button id="btn-download-txt" class="ghost">Download .txt</button>
+        </div>
+        <div id="asr-turns" class="turns"></div>
+        <pre id="asr-text" class="transcript"></pre>
+        <details>
+          <summary>Raw engine output</summary>
+          <pre id="asr-raw" class="raw"></pre>
+        </details>
+      </div>
+      <p id="asr-error" class="error hidden"></p>
+    </section>
+
+    <!-- =============== Text-to-speech =============== -->
+    <section id="tab-tts" class="panel">
+      <form id="form-tts">
+        <label for="tts-text">Text</label>
+        <textarea id="tts-text" rows="6" placeholder="Type or paste the text to speak...">Bună ziua! Aceasta este o sinteză vocală generată local.</textarea>
+
+        <div class="row">
+          <div>
+            <label for="tts-lang">Language</label>
+            <select id="tts-lang"></select>
+          </div>
+          <div>
+            <label for="tts-voice">Voice</label>
+            <select id="tts-voice"></select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="tts-speed">Speed: <span id="speed-val">1.05</span></label>
+            <input type="range" id="tts-speed" min="0.7" max="2.0" step="0.05" value="1.05">
+          </div>
+          <div>
+            <label for="tts-steps">Quality steps: <span id="steps-val">8</span></label>
+            <input type="range" id="tts-steps" min="5" max="12" step="1" value="8">
+          </div>
+        </div>
+
+        <button type="submit" class="primary" id="btn-tts">Generate speech</button>
+      </form>
+
+      <div id="tts-result" class="result hidden">
+        <div class="result-head">
+          <h2>Generated audio</h2>
+          <span id="tts-duration" class="muted"></span>
+          <div class="spacer"></div>
+          <a id="tts-download" class="ghost" download="speech.wav">Download .wav</a>
+        </div>
+        <audio id="tts-audio" controls></audio>
+      </div>
+      <p id="tts-error" class="error hidden"></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>All processing is local. Transcription runs on the macOS host via Core ML (Apple GPU/Neural Engine); speech synthesis runs in this container with Supertonic 3.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
