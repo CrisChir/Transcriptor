@@ -15,6 +15,6 @@ if [[ ! -f vendor/FluidAudio/.build/release/fluidaudiocli ]]; then
 fi
 
 HOST="${ENGINE_HOST:-0.0.0.0}"
-PORT="${ENGINE_PORT:-8760}"
+PORT="${ENGINE_PORT:-8765}"
 echo "Starting CoreML ASR engine on $HOST:$PORT ..."
 exec .venv/bin/python -m uvicorn main:app --host "$HOST" --port "$PORT"
