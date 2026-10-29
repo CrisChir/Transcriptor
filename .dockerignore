@@ -1,0 +1,14 @@
+.git
+.gitignore
+engine/
+scripts/
+models/
+.venv*/
+*.wav
+*.mp3
+*.m4a
+*.mp4
+__pycache__/
+*.pyc
+.env
+README.md

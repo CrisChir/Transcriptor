@@ -1,0 +1,21 @@
+services:
+  transcriptor:
+    build: .
+    image: transcriptor:latest
+    container_name: transcriptor
+    ports:
+      - "7860:7860"
+    environment:
+      # CoreML engine running on the macOS host (started with engine/run.sh)
+      ASR_ENGINE_URL: ${ASR_ENGINE_URL:-http://host.docker.internal:8765}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-500}
+      SUPERTONIC_MODEL_DIR: /models/supertonic
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - supertonic-models:/models
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  supertonic-models:
